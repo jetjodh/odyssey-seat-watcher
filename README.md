@@ -7,8 +7,8 @@ map, including showtimes AMC labels sold out.
 ## Your rules are already configured
 
 - One ticket is enough.
-- Showtime must start from **11:00 AM through 8:30 PM**, inclusive.
-- Only regular seats **J18-J26, K18-K26, L18-L26, or M18-M26** count.
+- **Any showtime** for The Odyssey in IMAX 70mm counts.
+- **Any open seat beyond the first 5 rows** (closest to the screen) counts.
 - Wheelchair, accessible, and companion spaces are ignored.
 - It checks up to 21 listed dates about every 10 minutes.
 - The alert includes the exact seat, date, time, and AMC booking link.

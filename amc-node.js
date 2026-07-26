@@ -6,8 +6,8 @@
  *
  * Configured for:
  *   - one regular seat
- *   - showtimes from 11:00 AM through 8:30 PM
- *   - central seats in rows J through M
+ *   - any showtime
+ *   - any seat beyond the first 5 rows (closest to the screen)
  *   - push notifications through ntfy and/or email through Gmail
  *
  * The script is designed for GitHub Actions. It stores a small deduplication
@@ -21,10 +21,6 @@ const nodemailer = require("nodemailer");
 
 puppeteer.use(StealthPlugin());
 
-function range(start, end) {
-  return Array.from({ length: end - start + 1 }, (_, index) => start + index);
-}
-
 const CONFIG = Object.freeze({
   theaterUrl:
     "https://www.amctheatres.com/movie-theatres/new-york-city/amc-lincoln-square-13/showtimes",
@@ -33,12 +29,8 @@ const CONFIG = Object.freeze({
   minShowtimeMinutes: 0,
   maxShowtimeMinutes: 24 * 60,
   maxDates: 21,
-  targetSeatsByRow: Object.freeze({
-    J: range(18, 26),
-    K: range(18, 26),
-    L: range(18, 26),
-    M: range(18, 26),
-  }),
+  // ponytail: front rows = closest to the screen (row A first). Bump to skip more/fewer.
+  excludedFrontRows: 5,
   stateFilePath: ".odyssey-watcher-state.json",
   stateBranch: (process.env.GITHUB_REF_NAME || "main").trim(),
   maxMissingScans: 3,
@@ -106,23 +98,28 @@ function getNewSeats(currentSeats, previousSeats) {
   return (currentSeats || []).filter((seat) => !previous.has(seat));
 }
 
-function rowOrder(row) {
-  const rows = Object.keys(CONFIG.targetSeatsByRow);
-  const index = rows.indexOf(row);
-  return index === -1 ? Number.MAX_SAFE_INTEGER : index;
-}
-
 function sortSeats(seats) {
   return [...seats].sort((left, right) => {
     const leftMatch = left.match(/^([A-Z])(\d+)$/);
     const rightMatch = right.match(/^([A-Z])(\d+)$/);
     if (!leftMatch || !rightMatch) return left.localeCompare(right);
 
-    const rowDifference = rowOrder(leftMatch[1]) - rowOrder(rightMatch[1]);
-    if (rowDifference !== 0) return rowDifference;
-
+    if (leftMatch[1] !== rightMatch[1]) {
+      return leftMatch[1].localeCompare(rightMatch[1]);
+    }
     return Number(leftMatch[2]) - Number(rightMatch[2]);
   });
+}
+
+// Front rows are the lowest letters (row A is closest to the screen). We keep
+// every parsed seat, drop the first N row letters, and return what is open.
+function selectEligibleSeats(parsedSeats, excludedFrontRows) {
+  const rows = [...new Set(parsedSeats.map((seat) => seat.row))].sort();
+  const frontRows = new Set(rows.slice(0, excludedFrontRows));
+  const eligible = parsedSeats
+    .filter((seat) => seat.available && !frontRows.has(seat.row))
+    .map((seat) => `${seat.row}${seat.col}`);
+  return sortSeats([...new Set(eligible)]);
 }
 
 function nycDateString(date = new Date()) {
@@ -296,26 +293,12 @@ async function getAvailableSeats(page, showtimeId) {
     throw error;
   }
 
-  const available = await page.evaluate((targetSeatsByRow) => {
-    const targets = Object.fromEntries(
-      Object.entries(targetSeatsByRow).map(([row, columns]) => [
-        row,
-        new Set(columns),
-      ])
-    );
+  const parsed = await page.evaluate(() => {
     const seats = [];
 
     for (const input of document.querySelectorAll("input[aria-label]")) {
       const label = input.getAttribute("aria-label") || "";
       const lowerLabel = label.toLowerCase();
-
-      if (
-        input.disabled ||
-        input.getAttribute("aria-disabled") === "true" ||
-        /occupied|unavailable|wheelchair|companion|accessible/.test(lowerLabel)
-      ) {
-        continue;
-      }
 
       const matches = [
         ...label.toUpperCase().matchAll(/\b([A-Z])\s*(\d{1,3})\b/g),
@@ -323,16 +306,22 @@ async function getAvailableSeats(page, showtimeId) {
       if (matches.length === 0) continue;
 
       const match = matches[matches.length - 1];
-      const row = match[1];
-      const column = Number.parseInt(match[2], 10);
+      const unavailable =
+        input.disabled ||
+        input.getAttribute("aria-disabled") === "true" ||
+        /occupied|unavailable|wheelchair|companion|accessible/.test(lowerLabel);
 
-      if (targets[row]?.has(column)) seats.push(`${row}${column}`);
+      seats.push({
+        row: match[1],
+        col: Number.parseInt(match[2], 10),
+        available: !unavailable,
+      });
     }
 
-    return [...new Set(seats)];
-  }, CONFIG.targetSeatsByRow);
+    return seats;
+  });
 
-  return sortSeats(available);
+  return selectEligibleSeats(parsed, CONFIG.excludedFrontRows);
 }
 
 function escapeHtml(value) {
@@ -362,7 +351,7 @@ function notificationDetails(hit, newSeats, isTest = false) {
         `${hit.date} at ${hit.time}`,
         `New qualifying seat${newlyOpened.length === 1 ? "" : "s"}: ${newlyOpened.join(", ")}`,
         `Currently open in your zone: ${allSeats.join(", ")}`,
-        "Rows J-M, seats 18-26; wheelchair and companion spaces excluded.",
+        "Any seat beyond the first 5 rows; wheelchair and companion spaces excluded.",
       ];
 
   return {
@@ -647,8 +636,8 @@ async function saveStateFile(stateSha, previousState, nextState) {
 
 async function runScan(page) {
   log("Scanning AMC Lincoln Square 13 for The Odyssey in IMAX 70mm.");
-  log("Time window: 11:00 AM through 8:30 PM.");
-  log("Seat zone: regular seats J18-J26, K18-K26, L18-L26, M18-M26.");
+  log("Time window: any showtime.");
+  log(`Seat zone: any open seat beyond the first ${CONFIG.excludedFrontRows} rows.`);
 
   const stateContext = DRY_RUN
     ? { enabled: false, sha: null, state: emptyState() }
@@ -856,5 +845,6 @@ module.exports = {
   parseShowtimeMinutes,
   parseState,
   saveStateFile,
+  selectEligibleSeats,
   sortSeats,
 };

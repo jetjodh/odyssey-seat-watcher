@@ -9,6 +9,7 @@ const {
   panelConfirmsImax70mm,
   parseShowtimeMinutes,
   parseState,
+  selectEligibleSeats,
   sortSeats,
 } = require("./amc-node");
 
@@ -40,6 +41,30 @@ test("sorts seats by configured row and number", () => {
   ]);
 });
 
+
+test("selects open seats beyond the first N rows, any column", () => {
+  const parsed = [
+    { row: "A", col: 10, available: true },
+    { row: "B", col: 10, available: true },
+    { row: "C", col: 10, available: true },
+    { row: "D", col: 10, available: true },
+    { row: "E", col: 10, available: true }, // 5th row from front → excluded
+    { row: "F", col: 1, available: true }, // eligible
+    { row: "F", col: 2, available: false }, // taken → skipped
+    { row: "M", col: 26, available: true }, // eligible, far back
+  ];
+  assert.deepEqual(selectEligibleSeats(parsed, 5), ["F1", "M26"]);
+});
+
+test("front-row exclusion counts a row even when it is sold out", () => {
+  const parsed = [
+    { row: "A", col: 5, available: false },
+    { row: "B", col: 5, available: false },
+    { row: "C", col: 5, available: true },
+    { row: "D", col: 5, available: true },
+  ];
+  assert.deepEqual(selectEligibleSeats(parsed, 2), ["C5", "D5"]);
+});
 
 test("parses persisted deduplication state", () => {
   const state = parseState(
