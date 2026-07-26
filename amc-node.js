@@ -29,8 +29,9 @@ const CONFIG = Object.freeze({
   theaterUrl:
     "https://www.amctheatres.com/movie-theatres/new-york-city/amc-lincoln-square-13/showtimes",
   movieTerms: ["the odyssey"],
-  minShowtimeMinutes: 11 * 60,
-  maxShowtimeMinutes: 20 * 60 + 30,
+  // ponytail: full-day window = any showtime. Narrow these to gate by time again.
+  minShowtimeMinutes: 0,
+  maxShowtimeMinutes: 24 * 60,
   maxDates: 21,
   targetSeatsByRow: Object.freeze({
     J: range(18, 26),

@@ -19,11 +19,12 @@ test("parses 12-hour showtimes", () => {
   assert.equal(parseShowtimeMinutes("not a time"), null);
 });
 
-test("enforces the requested time window", () => {
-  assert.equal(isAllowedShowtime("10:59 AM"), false);
+test("allows any parseable showtime (full-day window)", () => {
+  assert.equal(isAllowedShowtime("12:00 AM"), true);
   assert.equal(isAllowedShowtime("11:00 AM"), true);
-  assert.equal(isAllowedShowtime("8:30 PM"), true);
-  assert.equal(isAllowedShowtime("8:31 PM"), false);
+  assert.equal(isAllowedShowtime("8:31 PM"), true);
+  assert.equal(isAllowedShowtime("11:59 PM"), true);
+  assert.equal(isAllowedShowtime("not a time"), false);
 });
 
 test("finds newly opened seats", () => {
