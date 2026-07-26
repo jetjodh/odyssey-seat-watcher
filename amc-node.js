@@ -28,7 +28,8 @@ const CONFIG = Object.freeze({
   // ponytail: full-day window = any showtime. Narrow these to gate by time again.
   minShowtimeMinutes: 0,
   maxShowtimeMinutes: 24 * 60,
-  maxDates: 21,
+  // ponytail: next 24h = today + tomorrow. Raise to widen the horizon again.
+  maxDates: 2,
   // ponytail: front rows = closest to the screen (row A first). Bump to skip more/fewer.
   excludedFrontRows: 5,
   stateFilePath: ".odyssey-watcher-state.json",

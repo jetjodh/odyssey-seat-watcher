@@ -10,7 +10,7 @@ map, including showtimes AMC labels sold out.
 - **Any showtime** for The Odyssey in IMAX 70mm counts.
 - **Any open seat beyond the first 5 rows** (closest to the screen) counts.
 - Wheelchair, accessible, and companion spaces are ignored.
-- It checks up to 21 listed dates about every 10 minutes.
+- It checks the next 24 hours (today and tomorrow) about every 10 minutes.
 - The alert includes the exact seat, date, time, and AMC booking link.
 - It remembers previous alerts, so an unchanged available seat does not spam
   you every ten minutes. If a seat disappears and later returns, it can alert
