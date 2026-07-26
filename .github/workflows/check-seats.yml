@@ -27,7 +27,8 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Each run scans ~50 min then re-dispatches its successor; short cap is fine.
+    timeout-minutes: 65
 
     steps:
       - name: Check out repository
@@ -52,10 +53,43 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Run watcher
-        run: node amc-node.js
+      - name: Run watcher (self-loop ~5.5h, scan ~every 10 min)
+        run: |
+          set -u
+          # Manual test/dry-run dispatches run once and exit.
+          if [ "${TEST_NOTIFICATION:-}" = "true" ] || [ "${DRY_RUN:-}" = "true" ]; then
+            exec node amc-node.js
+          fi
+          # ponytail: on:schedule is unreliable (delays 15min-2.5h, drops runs), so
+          # we don't use it for cadence. Each run scans ~every 10 min for ~50 min,
+          # then re-dispatches its own successor (deterministic hand-off).
+          end=$(( $(date +%s) + 3000 ))   # ~50 min of scanning per run
+          while :; do
+            start=$(date +%s)
+            node amc-node.js || echo "scan failed; continuing loop"
+            nap=$(( 600 - ($(date +%s) - start) ))   # aim for a scan every 10 min
+            [ "$nap" -lt 30 ] && nap=30
+            [ $(( $(date +%s) + nap )) -ge "$end" ] && break
+            echo "next scan in ${nap}s"
+            sleep "$nap"
+          done
+          # Hand off to the next run. The default GITHUB_TOKEN cannot trigger a new
+          # workflow run, so this needs WORKFLOW_PAT (fine-grained, actions:write).
+          # Without it we fall back to the (throttled) on:schedule.
+          if [ -n "${WORKFLOW_PAT:-}" ]; then
+            curl -sf -X POST \
+              -H "Authorization: Bearer ${WORKFLOW_PAT}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/check-seats.yml/dispatches" \
+              -d '{"ref":"main"}' \
+              && echo "re-dispatched the next run" \
+              || echo "re-dispatch failed; on:schedule will restart eventually"
+          else
+            echo "no WORKFLOW_PAT secret; relying on the throttled on:schedule to restart"
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_PAT: ${{ secrets.WORKFLOW_PAT }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           NTFY_SERVER: ${{ secrets.NTFY_SERVER }}
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
