@@ -1,0 +1,17 @@
+FASTEST GITHUB-WEB SETUP
+
+1. Fork https://github.com/divkhare/amc-good-seats
+2. In your fork, open amc-node.js and click the pencil icon.
+3. Replace its contents with the amc-node.js from this folder and commit.
+4. Open .github/workflows/check-seats.yml and click the pencil icon.
+5. Replace its contents with the check-seats.yml from this folder and commit.
+6. In ntfy, subscribe to a long random topic name.
+7. In GitHub, go to Settings > Secrets and variables > Actions.
+8. Add a repository secret named NTFY_TOPIC with that topic name as its value.
+9. Go to Actions > Check Odyssey Seats > Run workflow.
+10. Turn on "Send a test notification only" and run it.
+11. Then run "Scan and show matches in the log without notifying" once.
+12. Finally, run normally with both switches off and leave the schedule enabled.
+
+The watcher is already configured for one regular central seat in rows J-M
+and showtimes from 11:00 AM through 8:30 PM.

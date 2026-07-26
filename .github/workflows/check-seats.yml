@@ -1,0 +1,65 @@
+name: Check Odyssey Seats
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Six times per hour, deliberately off the top of the hour.
+    - cron: "7,17,27,37,47,57 * * * *"
+  workflow_dispatch:
+    inputs:
+      test_notification:
+        description: "Send a test notification only"
+        type: boolean
+        default: false
+      dry_run:
+        description: "Scan and show matches in the log without notifying"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: odyssey-seat-watcher
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Cache npm and Puppeteer downloads
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.npm
+            ~/.cache/puppeteer
+          key: ${{ runner.os }}-odyssey-${{ hashFiles('package.json', 'package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-odyssey-
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run watcher
+        run: node amc-node.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_SERVER: ${{ secrets.NTFY_SERVER }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+          TEST_NOTIFICATION: ${{ inputs.test_notification }}
+          DRY_RUN: ${{ inputs.dry_run }}
