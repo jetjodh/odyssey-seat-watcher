@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "availability": {
+    "143822222": {
+      "movie": "The Odyssey",
+      "date": "2026-07-27",
+      "time": "10:00am",
+      "seats": [
+        "K32",
+        "K33"
+      ],
+      "missingScans": 0
+    }
+  }
+}
