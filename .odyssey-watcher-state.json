@@ -8,7 +8,7 @@
       "seats": [
         "J16"
       ],
-      "missingScans": 1
+      "missingScans": 2
     },
     "144885212": {
       "movie": "The Odyssey",
@@ -17,7 +17,7 @@
       "seats": [
         "J10"
       ],
-      "missingScans": 0
+      "missingScans": 1
     },
     "145266763": {
       "movie": "The Odyssey",
@@ -26,7 +26,7 @@
       "seats": [
         "J6"
       ],
-      "missingScans": 1
+      "missingScans": 2
     }
   }
 }
