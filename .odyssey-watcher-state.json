@@ -8,6 +8,15 @@
       "seats": [
         "J16"
       ],
+      "missingScans": 1
+    },
+    "144885212": {
+      "movie": "The Odyssey",
+      "date": "2026-08-07",
+      "time": "2:00am",
+      "seats": [
+        "J10"
+      ],
       "missingScans": 0
     },
     "145266763": {
@@ -17,7 +26,7 @@
       "seats": [
         "J6"
       ],
-      "missingScans": 0
+      "missingScans": 1
     }
   }
 }
