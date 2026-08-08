@@ -6,27 +6,19 @@
       "date": "2026-08-09",
       "time": "10:00am",
       "seats": [
-        "L3",
         "M2"
       ],
-      "missingScans": 1
+      "missingScans": 0
     },
     "145272580": {
       "movie": "The Odyssey",
       "date": "2026-08-09",
       "time": "6:00am",
       "seats": [
-        "F16",
         "H9",
-        "H29",
-        "J39",
-        "K36",
-        "K37",
-        "L7",
-        "L40",
-        "M7"
+        "J39"
       ],
-      "missingScans": 1
+      "missingScans": 0
     }
   }
 }
