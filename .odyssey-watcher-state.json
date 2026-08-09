@@ -1,4 +1,41 @@
 {
   "version": 1,
-  "availability": {}
+  "availability": {
+    "144696900": {
+      "movie": "The Odyssey",
+      "date": "2026-08-10",
+      "time": "10:00am",
+      "seats": [
+        "G33",
+        "G34",
+        "G37",
+        "L40"
+      ],
+      "missingScans": 0
+    },
+    "144696901": {
+      "movie": "The Odyssey",
+      "date": "2026-08-10",
+      "time": "2:00pm",
+      "seats": [
+        "F17",
+        "H26"
+      ],
+      "missingScans": 0
+    },
+    "144696903": {
+      "movie": "The Odyssey",
+      "date": "2026-08-10",
+      "time": "10:00pm",
+      "seats": [
+        "F11",
+        "F33",
+        "F34",
+        "F35",
+        "K37",
+        "L4"
+      ],
+      "missingScans": 0
+    }
+  }
 }
