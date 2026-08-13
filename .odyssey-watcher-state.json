@@ -1,14 +1,4 @@
 {
   "version": 1,
-  "availability": {
-    "145377446": {
-      "movie": "The Odyssey",
-      "date": "2026-08-15",
-      "time": "10:00am",
-      "seats": [
-        "L23"
-      ],
-      "missingScans": 0
-    }
-  }
+  "availability": {}
 }
